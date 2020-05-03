@@ -1,0 +1,21 @@
+Chào anh!
+
+Validator 02: phần tách validate thành 1 file riêng. 
+
+em sử dụng phiên bản express validator mới, chổ check validator là 1 array. anh cho em hỏi, em muốn export ra thành 1 module riêng như anh. rồi sau đó import lại như thế nào cho đúng hả anh? 
+
+router.post('/save',
+[check('name').not().isEmpty().trim().withMessage('Not empty'),
+check('ordering').isNumeric({gt:0}).withMessage('Must be number'),
+check('status').custom((value , { req }) => {
+if (value === 'novalue') {
+throw new Error('Status not be emptied');
+}
+return true;
+})],
+
+
+vì khi em export module ra như anh vào sau đó import vào [
+ValidateItem.validator()] thì bị lỗi. Em nên sửa lại như thế nào hả anh?
+Em cám ơn và mong anh trả lời! 
+

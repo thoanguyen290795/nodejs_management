@@ -1,0 +1,15 @@
+<%
+statusHelper = (collection,status,id)=>{
+    let xhmlStatus = '';
+    let link = systemConfig + '/'+ collection+ '/change-status/'+id +'/'+ status; 
+    if(status=='active'){
+        xhmlStatus =   '<span class="label label-success">Active</span>'
+    } else if(status=='inactive'){
+        xhmlStatus = '<span class="label label-warning">Inactive</span>'
+    }
+    return `<a href="${link}">${xhmlStatus}</a>`
+}
+%>
+
+
+

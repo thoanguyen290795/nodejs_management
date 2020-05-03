@@ -1,0 +1,18 @@
+<% 
+filterStatusHelper= (collection,statusFilter,keyword) => {
+    let xhml = '';
+    statusFilter.forEach((item)=>{
+        let link= systemConfig +'/'+collection+'/status/'+item.value;
+        if(keyword !== '' && keyword !== undefined) link += '?keyword=' + keyword;
+       xhml += `<a class="btn m-b-sm btn-${item.class} btn-sm" href="${link}">
+         ${item.name.toUpperCase()} ${item.count}
+     </a> `
+ 
+    })   
+    return xhml
+ } %>
+
+
+
+
+   

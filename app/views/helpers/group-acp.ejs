@@ -1,0 +1,10 @@
+<%
+groupACPHelper = (collection, group_acp, id) =>{
+    let link = systemConfig + '/'+ collection+ '/change-group-acp/'+id +'/'+ group_acp; 
+    let classGroupACP = (group_acp == 'yes')? 'fa-check-square-o': 'fa-square-o'; 
+    return  `<a href="${link}" class= "fa ${classGroupACP} fa-lg"></a>`;
+}
+%>
+
+
+
