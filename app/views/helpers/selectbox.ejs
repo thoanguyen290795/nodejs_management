@@ -1,0 +1,16 @@
+<% 
+selectboxHelper= (name,items, optionSelected='allvalue') => {
+    let xhml = '';
+    items.forEach((item)=>{
+        let selected = (item.id == optionSelected)? `selected="selected"`: ''; 
+        let id = (item.id == undefined)? 'allvalue' : item.id;
+            xhml+= `<option value="${id}" ${selected}>${item.name}</option>`
+
+    }); 
+    return `<select name="${name}" class="form-control">${xhml}</select>`
+ } 
+%>
+
+
+
+   

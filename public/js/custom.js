@@ -128,4 +128,14 @@ $(document).ready(function () {
             $(this).parent().css({'display':'none'});
         })    
     }
+    $('select[name="group_id"]').change(function(){
+        $('input[name="group_name"]').val($(this).find('option:selected').text()); 
+    });
+
+    $('select[name="filter_group"]').change(function(){
+        let path = window.location.pathname.split('/');
+        let linkRedirect = '/'+path[1]+ '/'+ path[2]+ '/filter-group/'+ $(this).val();
+            window.location.pathname = linkRedirect
+     
+    })
 });

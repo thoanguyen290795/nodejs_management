@@ -1,3 +1,5 @@
+<% include ./../../helpers/selectbox %>
+
 <% const collection = "users"; 
     const linkPrefix = systemConfig + `/${collection}/`; 
 %>
@@ -26,15 +28,19 @@
                                   name="ordering" value="<%= item.ordering%>">
                           </div>
                           <div class="form-group">
-                              <label>Status</label>
-                              <select name="status"
-                                  class="form-control">
-                                  <option value="novalue">Choose
-                                      Status</option>
-                                  <option value="active" <%=(item.status=="active")?'selected="selected"':''%> >Active</option>
-                                  <option value="inactive" <%=(item.status=="inactive")?'selected="selected"':''%> >Inactive</option>
-                              </select>
-                          </div>
+                            <label>Status</label>
+                            <select name="status"
+                                class="form-control">
+                                <option value="novalue">Choose
+                                    Status</option>
+                                <option value="active" <%=(item.status=="active")?'selected="selected"':''%> >Active</option>
+                                <option value="inactive" <%=(item.status=="inactive")?'selected="selected"':''%> >Inactive</option>
+                            </select>
+                        </div>
+                          <div class="form-group">
+                            <label>Group</label>
+                            <%-  selectboxHelper('group_id', groupsItems,item.group_id)%>
+                        </div>
                           <div class="form-group">
                             <label>Content</label>
                             <textarea class ="form-control" name="content" id="content_ck" rows="10" cols="80">
@@ -42,8 +48,8 @@
                             </textarea>
                         
                           </div>
-                          <input class="form-control"
-                              name="id" value="<%=item.id%>" type="hidden">
+                          <input class="form-control" name="id" value="<%=item.id%>" type="hidden">
+                          <input class="form-control" name="group_name" value="<%=item.group_name%>" type="hidden">
                           <button type="submit" class="btn
                               btn-primary">Submit </button>
                           <a type="button"

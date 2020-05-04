@@ -197,7 +197,6 @@ if(item.id!=='' && typeof item !== 'undefined'){
   }); 
 
   //CHANGE GROUP ACP 
-   //change status 
 router.get('/change-group-acp/:id/:group_acp', async (req, res, next) => {
   let currentGroupACP = paramsHelpers.getParam(req.params,'group_acp','yes');
   let id             = paramsHelpers.getParam(req.params,'id','');

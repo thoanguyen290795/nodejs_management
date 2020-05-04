@@ -2,6 +2,7 @@
 let express = require('express');
 let router = express.Router();
 const UsersModel    = require(__path_schemas    + 'users');
+const GroupsModel    = require(__path_schemas    + 'groups');
 const ValidateUser  = require(__path_validates  + 'users');
 const utilsHelpers  = require(__path_helpers    + 'utils')
 const paramsHelpers = require(__path_helpers    + 'params');
@@ -21,6 +22,8 @@ router.get('(/status/:status)?', (req, res, next) =>{
   let statusFilter =  utilsHelpers.createFilterStatus(currentStatus,'users');
   let sortField = paramsHelpers.getParam(req.session,'sort_field','name'); 
   let sortType =  paramsHelpers.getParam(req.session,'sort_type','asc'); 
+  let groupID =  paramsHelpers.getParam(req.session,'group_id',''); 
+
   let sort = {}; 
   sort[sortField] = sortType; 
   let pagination = {
@@ -29,8 +32,17 @@ router.get('(/status/:status)?', (req, res, next) =>{
     currentPage: parseInt(paramsHelpers.getParam(req.query, 'page', 1)),
     pageRanges:3
   }
+  let groupsItems = []; 
+   GroupsModel.find({},{_id: 1,name: 1}).then((items)=>{
+    groupsItems = items; 
+    groupsItems.unshift({_id: 'allvalue', name: 'All Group'})
+  });
+  if(groupID !== '') objWhere = {'group.id': groupID}
+  if(groupID == 'allvalue') objWhere = {};
   if(currentStatus !== 'all') objWhere.status = currentStatus; 
   if(keyword !== '') objWhere.name = new RegExp(keyword, 'i'); 
+
+
 
   UsersModel.countDocuments(objWhere).then( (data)=>{
     pagination.totalItems = data;  
@@ -38,7 +50,7 @@ router.get('(/status/:status)?', (req, res, next) =>{
 
     UsersModel
     .find(objWhere)
-    .select('name status ordering created modified')
+    .select('name status ordering created modified group.name')
     .sort(sort)
     .skip((pagination.currentPage-1) * pagination.totalItemsPerPage)
     .limit(pagination.totalItemsPerPage)
@@ -51,7 +63,9 @@ router.get('(/status/:status)?', (req, res, next) =>{
                                       currentStatus,
                                       keyword,
                                       sortField,
-                                      sortType
+                                      sortType,
+                                      groupsItems,
+                                      groupID
                 });
     })
   })
@@ -130,35 +144,51 @@ await UsersModel.remove({ _id: {$in:req.body.cid}}, (err,result)=>{
 }); 
 });
    //FORM
-router.get('/form(/:id)?', function(req, res, next) {
+router.get('/form(/:id)?', async (req, res, next) => {
   let id = paramsHelpers.getParam(req.params,'id',''); 
-  let item = {name:'', ordering: 0, status: 'novalue'};
+  let item = {name:'', ordering: 0, status: 'novalue', group_id:'', group_name: ''};
   let errors = null; 
+  let groupsItems = []; 
+  await GroupsModel.find({},{_id: 1,name: 1}).then((items)=>{
+    groupsItems = items; 
+    groupsItems.unshift({_id: 'novalue', name: 'Choose Group'})
+  });
+  
   if(id === ''){//Add
-    res.render(`${folderView}form`, { pageTitle: pageTitleAdd,item,errors });
+    res.render(`${folderView}form`, {pageTitle: pageTitleAdd,item,errors,groupsItems});
   } else { //Edit
     UsersModel.findById(id, (err, item) => {
-      res.render(`${folderView}form`, { pageTitle: pageTitleEdit,item,errors });
+      item.group_id = item.group.id; 
+      item.group_name = item.group_name; 
+      res.render(`${folderView}form`, { pageTitle: pageTitleEdit,item,errors,groupsItems });
     });  
   }
   ;
 }); 
-//ADDs
-router.post('/save', ValidateUser.validator,
-                    async (req, res, next) => {
+//ADD  SUBMIT EDIT
+router.post('/save', ValidateUser.validator, async (req, res, next) => {
   req.body = JSON.parse(JSON.stringify(req.body));
   let item = Object.assign(req.body)
   let errors = validationResult(req);
   errors = errors.errors;
-if(item.id!=='' && typeof item !== 'undefined'){
+if(item.id !=='' && typeof item !== 'undefined'){ //edit
     if (errors.length>0 ) {
-      res.render(`${folderView}form`, { pageTitle: pageTitleEdit,item,errors });
+      let groupsItems= [];
+      await GroupsModel.find({},{_id: 1,name: 1}).then((items)=>{
+        groupsItems = items; 
+        groupsItems.unshift({_id: 'novalue', name: 'Choose Group'})
+      });
+      res.render(`${folderView}form`,{ pageTitle: pageTitleEdit,item,errors,groupsItems});
     } else { 
       UsersModel.updateOne({ _id:item.id },{ 
         ordering: parseInt(item.ordering),
         name:item.name,
         status:item.status,
         content: item.content,
+        group: {
+          id: item.group_id,
+          name: item.group_name
+        },
         modified: {
           user_id: 0,
           user_name: '', 
@@ -170,13 +200,22 @@ if(item.id!=='' && typeof item !== 'undefined'){
         });
     }
 } else {
-  if (errors.length>0 ) {
-    res.render(`${folderView}form`, { pageTitle: pageTitleAdd,item,errors });
-  } else { //add 
+  if (errors.length>0 ) { //add - errors
+    let groupsItems= [];
+      await GroupsModel.find({},{_id: 1,name: 1}).then((items)=>{
+        groupsItems = items; 
+        groupsItems.unshift({_id: 'novalue', name: 'Choose Group'})
+      });
+    res.render(`${folderView}form`, { pageTitle: pageTitleAdd,item,errors,groupsItems });
+  } else { //add  - no errors
     item.created = {
       user_id : 0,
       user_name: 'admin',
       time: Date.now()
+    }
+    item.group = {
+      id: item.group_id,
+      name: item.group_name
     }
     new UsersModel(item).save().then(()=>{
       req.flash('success', 'Add item successfully',false);
@@ -185,11 +224,17 @@ if(item.id!=='' && typeof item !== 'undefined'){
   }
 }
   });
-
-  router.get('/sort/:sort_field/:sort_type', function(req, res, next) {
+//SORT
+  router.get('/sort/:sort_field/:sort_type', (req, res, next) => {
      req.session.sort_field = paramsHelpers.getParam(req.params,'sort_field','ordering'); 
      req.session.sort_type = sort_type = paramsHelpers.getParam(req.params,'sort_type','asc'); 
     res.redirect(linkIndex)
 
   }); 
+//filter
+router.get('/filter-group/:group_id', (req, res, next) => {
+  req.session.group_id = paramsHelpers.getParam(req.params,'group_id',''); 
+ res.redirect(linkIndex)
+
+}); 
 module.exports = router;
